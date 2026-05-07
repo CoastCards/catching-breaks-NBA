@@ -797,18 +797,10 @@
 
 <script>
   // Populate team dropdown
-  (function buildDropdown() {
-    const sel = document.getElementById('cpTeam');
-    NBA_TEAMS.forEach(t => {
-      const opt = document.createElement('option');
-      opt.value = t.abbr;
-      opt.textContent = t.abbr + ' — ' + t.name;
-      sel.appendChild(opt);
-    });
-  })();
+  // team dropdown built in control.html only
 
   // ─── SERVER SYNC (overlay only — polls for assignments) ──────────────────
-  const SERVER = 'https://catching-breaks-nba.onrender.com';
+  const SERVER = '';
   let lastSeenCount = 0;
 
   async function pollServer() {
