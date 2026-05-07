@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Catching Breaks — Control Panel</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --gold: #C9A84C;
+    --gold-light: #F0D080;
+    --gold-dim: #7A6330;
+    --black: #0A0A0A;
+    --dark: #111111;
+    --dark2: #1A1A1A;
+    --white: #F5F5F5;
+    --grey: #888;
+    --red: #8b2222;
+    --green: #2a6b2a;
+  }
+
+  body {
+    background: var(--black);
+    color: var(--white);
+    font-family: 'Barlow Condensed', sans-serif;
+    min-height: 100vh;
+    padding: 20px;
+  }
+
+  h1 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 32px;
+    letter-spacing: 4px;
+    color: var(--gold);
+    margin-bottom: 4px;
+  }
+
+  .subtitle {
+    font-size: 13px;
+    letter-spacing: 2px;
+    color: var(--grey);
+    margin-bottom: 20px;
+  }
+
+  /* Server status bar */
+  .status-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--dark2);
+    border: 1px solid var(--gold-dim);
+    border-radius: 4px;
+    padding: 10px 16px;
+    margin-bottom: 20px;
+  }
+
+  #serverStatus {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 15px;
+    letter-spacing: 2px;
+  }
+
+  #serverStatus.online  { color: #4caf50; }
+  #serverStatus.offline { color: #e57373; }
+
+  /* Assign form */
+  .assign-form {
+    background: var(--dark2);
+    border: 1px solid var(--gold-dim);
+    border-radius: 4px;
+    padding: 20px;
+    margin-bottom: 20px;
+    display: grid;
+    grid-template-columns: 1fr 1fr auto;
+    gap: 12px;
+    align-items: end;
+  }
+
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  label {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 13px;
+    letter-spacing: 3px;
+    color: var(--gold-dim);
+  }
+
+  select, input[type="text"] {
+    background: var(--dark);
+    border: 1px solid var(--gold-dim);
+    color: var(--white);
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 16px;
+    letter-spacing: 1px;
+    padding: 10px 12px;
+    border-radius: 3px;
+    outline: none;
+    width: 100%;
+    transition: border-color 0.15s;
+  }
+
+  select:focus, input:focus {
+    border-color: var(--gold);
+  }
+
+  select option { background: var(--dark2); }
+
+  .btn {
+    background: var(--gold);
+    color: var(--black);
+    border: none;
+    padding: 11px 28px;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 20px;
+    letter-spacing: 3px;
+    cursor: pointer;
+    border-radius: 3px;
+    transition: background 0.15s;
+    white-space: nowrap;
+  }
+
+  .btn:hover { background: var(--gold-light); }
+  .btn:disabled { background: #444; color: #666; cursor: not-allowed; }
+
+  #assignMsg {
+    grid-column: 1 / -1;
+    font-size: 14px;
+    letter-spacing: 1px;
+    min-height: 18px;
+    padding: 2px 0;
+  }
+
+  #assignMsg.ok  { color: #4caf50; }
+  #assignMsg.err { color: #e57373; }
+
+  /* Team grid — sold list */
+  .section-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 18px;
+    letter-spacing: 3px;
+    color: var(--gold-dim);
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .reset-btn {
+    background: var(--red);
+    color: #ffaaaa;
+    border: none;
+    padding: 6px 18px;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 15px;
+    letter-spacing: 2px;
+    cursor: pointer;
+    border-radius: 3px;
+    transition: background 0.15s;
+  }
+
+  .reset-btn:hover { background: #b22222; }
+
+  /* Sold list */
+  .sold-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 8px;
+    margin-bottom: 24px;
+  }
+
+  .sold-item {
+    background: var(--dark2);
+    border: 1px solid var(--gold);
+    border-radius: 3px;
+    padding: 8px 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .sold-item .abbr {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 18px;
+    color: var(--gold);
+    min-width: 36px;
+  }
+
+  .sold-item .buyer {
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    color: var(--white);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* Remaining list */
+  .remaining-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 6px;
+  }
+
+  .remaining-item {
+    background: var(--dark2);
+    border: 1px solid #2a2a2a;
+    border-radius: 3px;
+    padding: 6px 10px;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 15px;
+    letter-spacing: 1px;
+    color: var(--grey);
+  }
+
+  .counter {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 24px;
+    letter-spacing: 2px;
+    color: var(--gold);
+  }
+</style>
+</head>
+<body>
+
+<h1>Catching Breaks</h1>
+<div class="subtitle">CONTROL PANEL — HOST ONLY</div>
+
+<div class="status-bar">
+  <span id="serverStatus" class="offline">● CONNECTING TO SERVER...</span>
+  <span style="color:var(--grey);font-size:12px;margin-left:auto;">https://catching-breaks-nba.onrender.com</span>
+</div>
+
+<div class="assign-form">
+  <div class="field">
+    <label>Team</label>
+    <select id="cpTeam">
+      <option value="">— Select Team —</option>
+    </select>
+  </div>
+  <div class="field">
+    <label>Buyer Username</label>
+    <input type="text" id="cpUser" placeholder="Enter username" maxlength="30" autocomplete="off" />
+  </div>
+  <button class="btn" id="assignBtn" onclick="cpAssign()">ASSIGN</button>
+  <div id="assignMsg"></div>
+</div>
+
+<div class="section-title">
+  <span>SOLD — <span class="counter" id="soldCount">0</span> / 30</span>
+  <button class="reset-btn" onclick="cpReset()">RESET ALL</button>
+</div>
+<div class="sold-list" id="soldList">
+  <div style="color:var(--grey);font-size:13px;letter-spacing:1px;">No teams assigned yet.</div>
+</div>
+
+<div class="section-title" style="margin-top:16px;">
+  REMAINING — <span class="counter" id="remainingCount">30</span>
+</div>
+<div class="remaining-grid" id="remainingGrid"></div>
+
+<script>
+  const SERVER = 'https://catching-breaks-nba.onrender.com';
+
+  const NBA_TEAMS = [
+    { abbr: 'ATL', name: 'Hawks' },
+    { abbr: 'BOS', name: 'Celtics' },
+    { abbr: 'BKN', name: 'Nets' },
+    { abbr: 'CHA', name: 'Hornets' },
+    { abbr: 'CHI', name: 'Bulls' },
+    { abbr: 'CLE', name: 'Cavaliers' },
+    { abbr: 'DAL', name: 'Mavericks' },
+    { abbr: 'DEN', name: 'Nuggets' },
+    { abbr: 'DET', name: 'Pistons' },
+    { abbr: 'GSW', name: 'Warriors' },
+    { abbr: 'HOU', name: 'Rockets' },
+    { abbr: 'IND', name: 'Pacers' },
+    { abbr: 'LAC', name: 'Clippers' },
+    { abbr: 'LAL', name: 'Lakers' },
+    { abbr: 'MEM', name: 'Grizzlies' },
+    { abbr: 'MIA', name: 'Heat' },
+    { abbr: 'MIL', name: 'Bucks' },
+    { abbr: 'MIN', name: 'T-Wolves' },
+    { abbr: 'NOP', name: 'Pelicans' },
+    { abbr: 'NYK', name: 'Knicks' },
+    { abbr: 'OKC', name: 'Thunder' },
+    { abbr: 'ORL', name: 'Magic' },
+    { abbr: 'PHI', name: '76ers' },
+    { abbr: 'PHX', name: 'Suns' },
+    { abbr: 'POR', name: 'Blazers' },
+    { abbr: 'SAC', name: 'Kings' },
+    { abbr: 'SAS', name: 'Spurs' },
+    { abbr: 'TOR', name: 'Raptors' },
+    { abbr: 'UTA', name: 'Jazz' },
+    { abbr: 'WAS', name: 'Wizards' },
+  ];
+
+  // Build dropdown
+  const sel = document.getElementById('cpTeam');
+  NBA_TEAMS.forEach(t => {
+    const opt = document.createElement('option');
+    opt.value = t.abbr;
+    opt.textContent = t.abbr + ' — ' + t.name;
+    sel.appendChild(opt);
+  });
+
+  // Enter key on username field
+  document.getElementById('cpUser').addEventListener('keydown', e => {
+    if (e.key === 'Enter') cpAssign();
+  });
+
+  let lastAssignments = [];
+
+  // Poll server for current state and update UI
+  async function pollServer() {
+    try {
+      const res = await fetch(SERVER + '/state');
+      const data = await res.json();
+
+      document.getElementById('serverStatus').textContent = '● SERVER LIVE';
+      document.getElementById('serverStatus').className = 'online';
+
+      if (JSON.stringify(data.assignments) !== JSON.stringify(lastAssignments)) {
+        lastAssignments = data.assignments || [];
+        renderState(lastAssignments);
+      }
+    } catch(e) {
+      document.getElementById('serverStatus').textContent = '● SERVER OFFLINE — run: node server.js';
+      document.getElementById('serverStatus').className = 'offline';
+    }
+  }
+
+  function renderState(assignments) {
+    const soldNames = new Set(assignments.map(a => a.team.toLowerCase()));
+    const remaining = NBA_TEAMS.filter(t => !soldNames.has(t.name.toLowerCase()));
+
+    // Update counters
+    document.getElementById('soldCount').textContent = assignments.length;
+    document.getElementById('remainingCount').textContent = remaining.length;
+
+    // Sold list
+    const soldList = document.getElementById('soldList');
+    if (assignments.length === 0) {
+      soldList.innerHTML = '<div style="color:var(--grey);font-size:13px;letter-spacing:1px;">No teams assigned yet.</div>';
+    } else {
+      soldList.innerHTML = assignments.map(a => {
+        const team = NBA_TEAMS.find(t => t.name.toLowerCase() === a.team.toLowerCase());
+        const abbr = team ? team.abbr : '???';
+        return `<div class="sold-item">
+          <span class="abbr">${abbr}</span>
+          <span class="buyer">${a.user.toUpperCase()}</span>
+        </div>`;
+      }).join('');
+    }
+
+    // Remaining grid
+    const remainingGrid = document.getElementById('remainingGrid');
+    remainingGrid.innerHTML = remaining.map(t =>
+      `<div class="remaining-item">${t.abbr} — ${t.name}</div>`
+    ).join('');
+
+    // Update dropdown — disable already-sold options
+    Array.from(sel.options).forEach(opt => {
+      if (!opt.value) return;
+      const team = NBA_TEAMS.find(t => t.abbr === opt.value);
+      if (team && soldNames.has(team.name.toLowerCase())) {
+        opt.disabled = true;
+        opt.textContent = '✓ ' + opt.value + ' — ' + team.name;
+      } else if (team) {
+        opt.disabled = false;
+        opt.textContent = opt.value + ' — ' + team.name;
+      }
+    });
+  }
+
+  async function cpAssign() {
+    const abbr = document.getElementById('cpTeam').value;
+    const user = document.getElementById('cpUser').value.trim();
+    const msg  = document.getElementById('assignMsg');
+
+    if (!abbr) { showMsg('⚠ Select a team first.', 'err'); return; }
+    if (!user)  { showMsg('⚠ Enter a buyer username.', 'err'); return; }
+
+    const team = NBA_TEAMS.find(t => t.abbr === abbr);
+    if (!team)  { showMsg('⚠ Team not found.', 'err'); return; }
+
+    try {
+      const res = await fetch(SERVER + '/assign', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ team: team.name, user })
+      });
+      const data = await res.json();
+      if (data.ok) {
+        showMsg('✓ ' + team.abbr + ' ' + team.name + ' → ' + user.toUpperCase(), 'ok');
+        document.getElementById('cpUser').value = '';
+        document.getElementById('cpTeam').value = '';
+        await pollServer(); // refresh immediately
+      } else {
+        showMsg('⚠ Already assigned.', 'err');
+      }
+    } catch(e) {
+      showMsg('⚠ Server offline! Run server.js first.', 'err');
+    }
+  }
+
+  async function cpReset() {
+    if (!confirm('Reset all team assignments? This will clear the overlay too.')) return;
+    try {
+      await fetch(SERVER + '/reset', { method: 'POST' });
+      showMsg('Board reset.', 'ok');
+      await pollServer();
+    } catch(e) {
+      showMsg('⚠ Server offline.', 'err');
+    }
+  }
+
+  function showMsg(text, type) {
+    const el = document.getElementById('assignMsg');
+    el.textContent = text;
+    el.className = type;
+    setTimeout(() => { el.textContent = ''; el.className = ''; }, 4000);
+  }
+
+  setInterval(pollServer, 800);
+  pollServer();
+</script>
+</body>
+</html>

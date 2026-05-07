@@ -1,0 +1,9 @@
+{
+  "name": "catching-breaks-nba",
+  "version": "1.0.0",
+  "description": "Catching Breaks NBA overlay server",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  }
+}
