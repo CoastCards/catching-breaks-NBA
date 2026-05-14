@@ -76,6 +76,27 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  // POST /unassign — removes a single team assignment
+  if (req.method === 'POST' && req.url === '/unassign') {
+    let body = '';
+    req.on('data', chunk => body += chunk);
+    req.on('end', () => {
+      try {
+        const { team } = JSON.parse(body);
+        const before = assignments.length;
+        assignments = assignments.filter(a => a.team.toLowerCase() !== team.toLowerCase());
+        const removed = assignments.length < before;
+        console.log(removed ? `✗ Unassigned: ${team}` : `⚠ Unassign: ${team} not found`);
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: removed }));
+      } catch(e) {
+        res.writeHead(400);
+        res.end(JSON.stringify({ ok: false, error: e.message }));
+      }
+    });
+    return;
+  }
+
   // POST /reset — clears all assignments
   if (req.method === 'POST' && req.url === '/reset') {
     assignments = [];

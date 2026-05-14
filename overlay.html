@@ -667,7 +667,22 @@
         return;
       }
     } else {
-      // Unselling not supported via server — just ignore clicks on sold slots
+      const teamName = slot.querySelector('.team-logo')?.alt || slot.querySelector('.team-abbr-fallback')?.textContent || 'this team';
+      const buyer = slot.dataset.username || '';
+      if (!confirm(`Unassign ${teamName}${buyer ? ' from ' + buyer.toUpperCase() : ''}?`)) return;
+
+      try {
+        const res = await fetch(SERVER + '/unassign', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ team: teamName })
+        });
+        const data = await res.json();
+        if (!data.ok) alert('Could not unassign — team not found on server.');
+        // Let the poll loop handle the visual update
+      } catch(e) {
+        alert('Server unreachable. Unassignment not saved.');
+      }
     }
   }
 
@@ -697,16 +712,34 @@
       }
 
       const assignments = data.assignments || [];
-      if (assignments.length > lastSeenCount) {
-        for (let i = lastSeenCount; i < assignments.length; i++) {
-          const a = assignments[i];
-          const slot = findTeamSlotByName(a.team);
-          if (slot && slot.dataset.sold !== 'true') {
-            autoAssign(a.team, a.user);
-          }
+      const serverTeams = new Set(assignments.map(a => a.team.toLowerCase()));
+
+      // Assign any new ones
+      assignments.forEach(a => {
+        const slot = findTeamSlotByName(a.team);
+        if (slot && slot.dataset.sold !== 'true') {
+          autoAssign(a.team, a.user);
         }
-        lastSeenCount = assignments.length;
-      }
+      });
+
+      // Unassign any that were removed on the server
+      document.querySelectorAll('.team-slot[data-sold="true"]').forEach(slot => {
+        const img = slot.querySelector('.team-logo');
+        const fallback = slot.querySelector('.team-abbr-fallback');
+        const slotTeamName = (img?.alt || fallback?.textContent || '').toLowerCase();
+        if (slotTeamName && !serverTeams.has(slotTeamName)) {
+          slot.dataset.sold = 'false';
+          slot.classList.remove('sold');
+          const ov = slot.querySelector('.sold-overlay');
+          if (ov) ov.remove();
+          soldCount--;
+          document.getElementById('soldCount').textContent = `${soldCount} / ${total} Sold`;
+          document.getElementById('remaining').textContent = total - soldCount;
+          checkAllSold();
+        }
+      });
+
+      lastSeenCount = assignments.length;
     } catch(e) { /* server not running yet */ }
   }
 
