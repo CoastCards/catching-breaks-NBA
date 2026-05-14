@@ -641,7 +641,7 @@
     }
   }
 
-  function handleSlotClick(slot) {
+  async function handleSlotClick(slot) {
     const isSold = slot.dataset.sold === 'true';
 
     if (!isSold) {
@@ -649,33 +649,26 @@
       const username = prompt(`Who won ${teamName}?`);
       if (username === null || username.trim() === '') return;
 
-      slot.dataset.sold = 'true';
-      slot.dataset.username = username.trim();
-      slot.classList.add('sold');
-
-      const overlay = document.createElement('div');
-      overlay.className = 'sold-overlay';
-      overlay.innerHTML = `
-        <svg class="sold-x-svg" viewBox="0 0 100 100" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
-          <line x1="8" y1="8" x2="92" y2="92"/>
-          <line x1="92" y1="8" x2="8" y2="92"/>
-        </svg>
-        <div class="sold-username"></div>`;
-      slot.appendChild(overlay);
-
-      typewriter(overlay.querySelector('.sold-username'), username.trim().toUpperCase());
-      soldCount++;
+      // Post to server — all connected clients (including OBS) will update via polling
+      try {
+        const res = await fetch(SERVER + '/assign', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ team: teamName, user: username.trim() })
+        });
+        const data = await res.json();
+        if (!data.ok) {
+          alert('Could not assign — team may already be taken.');
+          return;
+        }
+        // Let the poll loop handle the visual update
+      } catch(e) {
+        alert('Server unreachable. Assignment not saved.');
+        return;
+      }
     } else {
-      slot.dataset.sold = 'false';
-      slot.classList.remove('sold');
-      const overlay = slot.querySelector('.sold-overlay');
-      if (overlay) overlay.remove();
-      soldCount--;
+      // Unselling not supported via server — just ignore clicks on sold slots
     }
-
-    document.getElementById('soldCount').textContent = `${soldCount} / ${total} Sold`;
-    document.getElementById('remaining').textContent = total - soldCount;
-    checkAllSold();
   }
 
   buildGrid();
